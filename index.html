@@ -116,54 +116,41 @@
     </footer>
 
     <script>
-      const discordId = '882901706587910144';
-      const staticAvatar = `https://cdn.discordapp.com/avatars/${discordId}/1ff523b0a986dbc6cb0cb753e143a89d.png?size=256`;
-      document.getElementById('discord-avatar').src = staticAvatar;
+  const faders = document.querySelectorAll('.fade-in');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  });
+  faders.forEach(el => observer.observe(el));
 
-      // Smooth fade-in animation
-      const faders = document.querySelectorAll('.fade-in');
-      const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) entry.target.classList.add('visible');
-        });
-      });
-      faders.forEach(el => observer.observe(el));
+  const discordId = '882901706587910144';
+  const staticAvatar = `https://cdn.discordapp.com/avatars/${discordId}/1ff523b0a986dbc6cb0cb753e143a89d.png?size=256`;
+  document.getElementById('discord-avatar').src = staticAvatar;
 
-      // --- Live Discord status via Lanyard WebSocket ---
-      const socket = new WebSocket("wss://api.lanyard.rest/socket");
-      let heartbeatInterval;
+  const statusEl = document.getElementById('discord-status');
 
-      socket.addEventListener("open", () => {
-        socket.send(JSON.stringify({ op: 2, d: { subscribe_to_id: discordId } }));
-      });
+  async function updateStatus() {
+    try {
+      const res = await fetch(`https://api.lanyard.rest/v1/users/${discordId}`);
+      if (!res.ok) throw new Error("Failed to fetch Lanyard data");
+      const data = await res.json();
+      const presence = data?.data?.discord_status || "offline";
 
-      socket.addEventListener("message", (event) => {
-        const data = JSON.parse(event.data);
-        if (data.op === 1) {
-          heartbeatInterval = setInterval(() => {
-            socket.send(JSON.stringify({ op: 3 }));
-          }, data.d.heartbeat_interval);
-        }
+      let emoji = "⚫";
+      if (presence === "online") emoji = "🟢";
+      if (presence === "idle") emoji = "🟠";
+      if (presence === "dnd") emoji = "⛔";
 
-        if (data.t === "INIT_STATE" || data.t === "PRESENCE_UPDATE") {
-          const presence = data.d.discord_status || "offline";
-          const emoji =
-            presence === "online" ? "🟢" :
-            presence === "idle" ? "🟠" :
-            presence === "dnd" ? "⛔" : "⚫";
+      statusEl.textContent = `${emoji} Status: ${presence}`;
+    } catch (err) {
+      console.error("Status fetch failed:", err);
+      statusEl.textContent = "🔴 Status: Unavailable";
+    }
+  }
 
-          document.getElementById("discord-status").textContent = `${emoji} Status: ${presence}`;
-        }
-      });
-
-      socket.addEventListener("close", () => {
-        clearInterval(heartbeatInterval);
-        document.getElementById("discord-status").textContent = "🔴 Status: Disconnected";
-      });
-
-      socket.addEventListener("error", () => {
-        document.getElementById("discord-status").textContent = "🔴 Status: Error";
-      });
-    </script>
+  updateStatus(); // run once at start
+  setInterval(updateStatus, 30000); // update every 30 seconds
+</script>
   </body>
 </html>
