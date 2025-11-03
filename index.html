@@ -54,12 +54,12 @@
     </style>
   </head>
   <body>
-    <header class="flex flex-col md:flex-row items-center justify-between px-8 py-16 max-w-5xl mx-auto relative">
+    <header class="flex flex-col md:flex-row items-center justify-between px-8 py-16 max-w-5xl mx-auto">
       <div class="flex items-center space-x-6">
         <img id="discord-avatar" alt="Discord Profile" class="rounded-full w-20 h-20 object-cover shadow-lg border-4 border-white" />
         <div>
           <h1 class="text-5xl font-extrabold gradient-text">Hi — I'm Giorgio</h1>
-          <p id="typewriter" class="text-lg text-gray-600"></p>
+          <p class="text-lg text-gray-600">Aviation enthusiast & Discord bot developer</p>
         </div>
       </div>
     </header>
@@ -77,20 +77,22 @@
       <section id="projects" class="fade-in">
         <h2 class="text-3xl font-semibold mb-8 header-projects">Projects</h2>
         <div class="grid md:grid-cols-2 gap-8">
-          <div class="p-6 rounded-2xl shadow-lg glass border border-white/30 hover:scale-105 hover:shadow-2xl transition-transform duration-300">
+          <div class="p-6 rounded-2xl shadow-lg glass border border-white/30">
             <h3 class="text-xl font-semibold mb-2">ATMOS Rewards Bot</h3>
             <p class="text-gray-700 mb-4">A simple rewards bot for a PTFS Alaskan Airlines startup, hosted by.</p>
             <a href="" class="text-blue-600 hover:underline">NO GITHUB AVAILABLE</a>
           </div>
-          <div class="p-6 rounded-2xl shadow-lg glass border border-white/30 hover:scale-105 hover:shadow-2xl transition-transform duration-300">
+          <div class="p-6 rounded-2xl shadow-lg glass border border-white/30">
             <h3 class="text-xl font-semibold mb-2">Korean Air PTFS Website</h3>
             <p class="text-gray-700 mb-4">A simple website, requested for a PTC based Korean Air virtual airline.</p>
             <a href="https://github.com/Gio1112/korean-air" class="text-blue-600 hover:underline">View on GitHub</a>
           </div>
-          <div class="p-6 rounded-2xl shadow-lg glass border border-white/30 hover:scale-105 hover:shadow-2xl transition-transform duration-300">
-            <h3 class="text-xl font-semibold mb-2">BA Helpdesk & BA Utilities</h3>
-            <p class="text-gray-700 mb-4">A set of two bots: a support bot, with nice embeds and graphics, and a utilities bot with a simple quick and deployable booking system.</p>
-            <a href="" class="text-blue-600 hover:underline">NO GITHUB AVAILABLE</a>
+          <div class="grid md:grid-cols-1 gap-8">
+            <div class="p-6 rounded-2xl shadow-lg glass border border-white/30">
+              <h3 class="text-xl font-semibold mb-2">BA Helpdesk & BA Utilities</h3>
+              <p class="text-gray-700 mb-4">A set of two bots: a support bot, with nice embeds and graphics and a utilities bot with a simple quick and deployable ready booking system all hosted by me.</p>
+              <a href="" class="text-blue-600 hover:underline">NO GITHUB AVAILABLE</a>
+            </div>
           </div>
         </div>
       </section>
@@ -103,9 +105,8 @@
             <li><a href="mailto:giorgiodabest1@gmail.com" class="text-blue-600 hover:underline">📧 giorgiodabest1@gmail.com</a></li>
             <li><a id="discord-link" href="https://discord.com/users/882901706587910144" class="text-blue-600 hover:underline">💬 Discord: giorgiodabest#0</a></li>
             <li><a href="https://github.com/Gio1112" class="text-blue-600 hover:underline">💻 GitHub: Gio1112</a></li>
+            <p id="discord-status" class="text-gray-600">🟡 Status: Connecting...</p>
           </ul>
-          <p id="discord-status" class="text-gray-600 mt-4">🟢 Status: Loading...</p>
-          <p id="spotify-now" class="text-gray-600"></p>
         </div>
       </section>
     </main>
@@ -115,62 +116,54 @@
     </footer>
 
     <script>
-      // Fade animations
-      const faders = document.querySelectorAll('.fade-in');
-      const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-          }
-        });
-      });
-      faders.forEach(el => observer.observe(el));
+  const faders = document.querySelectorAll('.fade-in');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  });
+  faders.forEach(el => observer.observe(el));
 
-      // Discord avatar
-      const discordId = '882901706587910144';
-      fetch(`https://cors.is-a.dev/https://discord.com/api/users/${discordId}`)
-        .then(res => res.json())
-        .then(user => {
-          if (user && user.avatar) {
-            const avatarUrl = `https://cdn.discordapp.com/avatars/${discordId}/${user.avatar}.png?size=256`;
-            document.getElementById('discord-avatar').src = avatarUrl;
-            document.getElementById('discord-link').href = `https://discord.com/users/${discordId}`;
-            document.getElementById('discord-link').textContent = `💬 Discord: ${user.username}`;
-          } else {
-            document.getElementById('discord-avatar').src = `https://cdn.discordapp.com/avatars/${discordId}/1ff523b0a986dbc6cb0cb753e143a89d.png?size=256`;
-          }
-        })
-        .catch(() => {
-          document.getElementById('discord-avatar').src = `https://cdn.discordapp.com/avatars/${discordId}/1ff523b0a986dbc6cb0cb753e143a89d.png?size=256`;
-        });
+  const discordId = '882901706587910144';
+  const staticAvatar = `https://cdn.discordapp.com/avatars/${discordId}/1ff523b0a986dbc6cb0cb753e143a89d.png?size=256`;
+  document.getElementById('discord-avatar').src = staticAvatar;
 
-      // Discord status + Spotify (via Lanyard)
-      fetch(`https://api.lanyard.rest/v1/users/${discordId}`)
-        .then(res => res.json())
-        .then(data => {
-          const status = data.data.discord_status;
-          document.getElementById('discord-status').textContent = `🟢 Status: ${status}`;
-          if (data.data.spotify) {
-            const song = data.data.spotify.song;
-            const artist = data.data.spotify.artist;
-            document.getElementById('spotify-now').textContent = `🎧 Listening to ${song} by ${artist}`;
-          }
-        })
-        .catch(() => {
-          document.getElementById('discord-status').textContent = '🔴 Status: unavailable';
-        });
+  // --- Lanyard WebSocket live status ---
+  const socket = new WebSocket("wss://api.lanyard.rest/socket");
 
-      // Typewriter text
-      const text = "Aviation enthusiast & Discord bot developer";
-      let i = 0;
-      function type() {
-        if (i < text.length) {
-          document.getElementById("typewriter").textContent += text.charAt(i);
-          i++;
-          setTimeout(type, 50);
-        }
-      }
-      type();
-    </script>
-  </body>
+  socket.addEventListener("open", () => {
+    socket.send(JSON.stringify({
+      op: 2,
+      d: { subscribe_to_id: discordId }
+    }));
+  });
+
+  socket.addEventListener("message", (event) => {
+    const data = JSON.parse(event.data);
+    if (!data || !data.t || !data.d) return;
+
+    // Pull status safely regardless of payload type
+    let presence;
+    if (data.t === "INIT_STATE") presence = data.d.discord_status;
+    if (data.t === "PRESENCE_UPDATE") presence = data.d.discord_status;
+
+    // Fallback
+    if (!presence) presence = "offline";
+
+    let emoji = "⚫";
+    if (presence === "online") emoji = "🟢";
+    if (presence === "idle") emoji = "🟠";
+    if (presence === "dnd") emoji = "⛔";
+
+    document.getElementById("discord-status").textContent = `${emoji} Status: ${presence}`;
+  });
+
+  socket.addEventListener("close", () => {
+    document.getElementById("discord-status").textContent = "🔴 Status: Disconnected";
+  });
+
+  socket.addEventListener("error", () => {
+    document.getElementById("discord-status").textContent = "🔴 Status: Error";
+  });
+</script>
 </html>
