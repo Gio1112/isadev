@@ -116,54 +116,54 @@
     </footer>
 
     <script>
-  const faders = document.querySelectorAll('.fade-in');
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) entry.target.classList.add('visible');
-    });
-  });
-  faders.forEach(el => observer.observe(el));
+      const discordId = '882901706587910144';
+      const staticAvatar = `https://cdn.discordapp.com/avatars/${discordId}/1ff523b0a986dbc6cb0cb753e143a89d.png?size=256`;
+      document.getElementById('discord-avatar').src = staticAvatar;
 
-  const discordId = '882901706587910144';
-  const staticAvatar = `https://cdn.discordapp.com/avatars/${discordId}/1ff523b0a986dbc6cb0cb753e143a89d.png?size=256`;
-  document.getElementById('discord-avatar').src = staticAvatar;
+      // Smooth fade-in animation
+      const faders = document.querySelectorAll('.fade-in');
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
+      });
+      faders.forEach(el => observer.observe(el));
 
-  // --- Lanyard WebSocket live status ---
-  const socket = new WebSocket("wss://api.lanyard.rest/socket");
+      // --- Live Discord status via Lanyard WebSocket ---
+      const socket = new WebSocket("wss://api.lanyard.rest/socket");
+      let heartbeatInterval;
 
-  socket.addEventListener("open", () => {
-    socket.send(JSON.stringify({
-      op: 2,
-      d: { subscribe_to_id: discordId }
-    }));
-  });
+      socket.addEventListener("open", () => {
+        socket.send(JSON.stringify({ op: 2, d: { subscribe_to_id: discordId } }));
+      });
 
-  socket.addEventListener("message", (event) => {
-    const data = JSON.parse(event.data);
-    if (!data || !data.t || !data.d) return;
+      socket.addEventListener("message", (event) => {
+        const data = JSON.parse(event.data);
+        if (data.op === 1) {
+          heartbeatInterval = setInterval(() => {
+            socket.send(JSON.stringify({ op: 3 }));
+          }, data.d.heartbeat_interval);
+        }
 
-    // Pull status safely regardless of payload type
-    let presence;
-    if (data.t === "INIT_STATE") presence = data.d.discord_status;
-    if (data.t === "PRESENCE_UPDATE") presence = data.d.discord_status;
+        if (data.t === "INIT_STATE" || data.t === "PRESENCE_UPDATE") {
+          const presence = data.d.discord_status || "offline";
+          const emoji =
+            presence === "online" ? "🟢" :
+            presence === "idle" ? "🟠" :
+            presence === "dnd" ? "⛔" : "⚫";
 
-    // Fallback
-    if (!presence) presence = "offline";
+          document.getElementById("discord-status").textContent = `${emoji} Status: ${presence}`;
+        }
+      });
 
-    let emoji = "⚫";
-    if (presence === "online") emoji = "🟢";
-    if (presence === "idle") emoji = "🟠";
-    if (presence === "dnd") emoji = "⛔";
+      socket.addEventListener("close", () => {
+        clearInterval(heartbeatInterval);
+        document.getElementById("discord-status").textContent = "🔴 Status: Disconnected";
+      });
 
-    document.getElementById("discord-status").textContent = `${emoji} Status: ${presence}`;
-  });
-
-  socket.addEventListener("close", () => {
-    document.getElementById("discord-status").textContent = "🔴 Status: Disconnected";
-  });
-
-  socket.addEventListener("error", () => {
-    document.getElementById("discord-status").textContent = "🔴 Status: Error";
-  });
-</script>
+      socket.addEventListener("error", () => {
+        document.getElementById("discord-status").textContent = "🔴 Status: Error";
+      });
+    </script>
+  </body>
 </html>
